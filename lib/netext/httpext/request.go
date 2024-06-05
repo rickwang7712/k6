@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/cookiejar"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -229,6 +230,15 @@ func MakeRequest(ctx context.Context, state *lib.State, preq *ParsedHTTPRequest)
 	}
 
 	resp := &Response{URL: preq.URL.URL, Request: respReq}
+	if os.Getenv("ZITI_ENABLED") == "true" { //nolint: forbidigo //for dev
+		originTransport, ok := state.Transport.(*http.Transport)
+		if !ok {
+			panic("failed to get origin transport")
+		}
+
+		state.Transport = GetZitiTransport(originTransport)
+	}
+
 	client := http.Client{
 		Transport: transport,
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
