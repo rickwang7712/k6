@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/openziti/sdk-golang/ziti"
 )
@@ -35,6 +36,12 @@ func GetZitiTransport(originTransport *http.Transport) *http.Transport {
 	if err != nil {
 		panic(fmt.Sprintf("err creating ziti context: %v", err))
 	}
+
+	impl, ok := ctx.(*ziti.ContextImpl)
+	if !ok {
+		panic("failed to get *ziti.ContextImpl from ziti.Context")
+	}
+	impl.CtrlClt.HttpClient.Timeout = 30 * time.Second
 
 	zitiDialContext := ZitiDialContext{context: ctx}
 	zitiTransport := originTransport.Clone() // copy default transport
